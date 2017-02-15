@@ -244,7 +244,8 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/google-analytics-lib",
+					"$(SRCROOT)/../../../../ios/Pods/Google/**",
+					"$(SRCROOT)/../../../../ios/Pods/GoogleAnalytics/**",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -266,7 +267,8 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/google-analytics-lib",
+					"$(SRCROOT)/../../../../ios/Pods/Google/**",
+					"$(SRCROOT)/../../../../ios/Pods/GoogleAnalytics/**",
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
