@@ -241,12 +241,9 @@
 					"$(SRCROOT)/node_modules/react-native/React",
 					"$(SRCROOT)/../../example/node_modules/react-native/React/**",
 					"$(SRCROOT)/../../../react-native/React/**",
+					"$(SRCROOT)/../../../../ios/Pods/Headers/Public/GoogleAnalytics",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../../../../ios/Pods/Google/**",
-					"$(SRCROOT)/../../../../ios/Pods/GoogleAnalytics/**",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -264,12 +261,9 @@
 					"$(SRCROOT)/node_modules/react-native/React",
 					"$(SRCROOT)/../../example/node_modules/react-native/React/**",
 					"$(SRCROOT)/../../../react-native/React/**",
+					"$(SRCROOT)/../../../../ios/Pods/Headers/Public/GoogleAnalytics",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/../../../../ios/Pods/Google/**",
-					"$(SRCROOT)/../../../../ios/Pods/GoogleAnalytics/**",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
