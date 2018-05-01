@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.Promise;
 
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
@@ -84,7 +85,7 @@ public class GoogleAnalyticsBridge extends ReactContextBaseJavaModule {
                 }
                 if (optionalValues.hasKey("value"))
                 {
-                    hit.setValue(optionalValues.getInt("value"));
+                    hit.setValue((long) optionalValues.getDouble("value"));
                 }
             }
 
@@ -102,13 +103,16 @@ public class GoogleAnalyticsBridge extends ReactContextBaseJavaModule {
                         .setCategory(category)
                         .setValue(value.longValue());
 
-            if (optionalValues.hasKey("name"))
+            if (optionalValues != null)
             {
-                hit.setVariable(optionalValues.getString("name"));
-            }
-            if (optionalValues.hasKey("label"))
-            {
-                hit.setLabel(optionalValues.getString("label"));
+                if (optionalValues.hasKey("name"))
+                {
+                    hit.setVariable(optionalValues.getString("name"));
+                }
+                if (optionalValues.hasKey("label"))
+                {
+                    hit.setLabel(optionalValues.getString("label"));
+                }
             }
 
             tracker.send(hit.build());
@@ -267,6 +271,31 @@ public class GoogleAnalyticsBridge extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void setClient(String trackerId, String clientId)
+    {
+        Tracker tracker = getTracker(trackerId);
+
+        if (tracker != null) {
+            tracker.set("&cid", clientId);
+        }
+    }
+
+    @ReactMethod
+    public void getClientId(String trackerId, Promise promise)
+    {
+        try {
+            Tracker tracker = getTracker(trackerId);
+            String clientId = "";
+            if (tracker != null) {
+                clientId = tracker.get("&cid");
+            }
+            promise.resolve(clientId);
+        } catch (Exception ex) {
+            promise.reject(ex);
+        }
+    }
+
+    @ReactMethod
     public void allowIDFA(String trackerId, Boolean enabled)
     {
         Tracker tracker = getTracker(trackerId);
@@ -312,6 +341,12 @@ public class GoogleAnalyticsBridge extends ReactContextBaseJavaModule {
     @ReactMethod
     public void trackEventWithCustomDimensionValues(String trackerId, String category, String action, ReadableMap optionalValues, ReadableMap dimensionIndexValues)
     {
+        this.trackEventWithCustomDimensionAndMetricValues(trackerId, category, action, optionalValues, dimensionIndexValues, null);
+    }
+
+    @ReactMethod
+    public void trackEventWithCustomDimensionAndMetricValues(String trackerId, String category, String action, ReadableMap optionalValues, ReadableMap dimensionIndexValues, ReadableMap metricIndexValues)
+    {
         Tracker tracker = getTracker(trackerId);
 
         if (tracker != null)
@@ -320,13 +355,17 @@ public class GoogleAnalyticsBridge extends ReactContextBaseJavaModule {
                         .setCategory(category)
                         .setAction(action);
 
-            if (optionalValues.hasKey("label"))
+
+            if (optionalValues != null)
             {
-                hit.setLabel(optionalValues.getString("label"));
-            }
-            if (optionalValues.hasKey("value"))
-            {
-                hit.setValue(optionalValues.getInt("value"));
+                if (optionalValues.hasKey("label"))
+                {
+                    hit.setLabel(optionalValues.getString("label"));
+                }
+                if (optionalValues.hasKey("value"))
+                {
+                    hit.setValue((long) optionalValues.getDouble("value"));
+                }
             }
 
             ReadableMapKeySetIterator iterator = dimensionIndexValues.keySetIterator();
@@ -334,6 +373,15 @@ public class GoogleAnalyticsBridge extends ReactContextBaseJavaModule {
                 String dimensionIndex = iterator.nextKey();
                 String dimensionValue = dimensionIndexValues.getString(dimensionIndex);
                 hit.setCustomDimension(Integer.parseInt(dimensionIndex), dimensionValue);
+            }
+
+            if(metricIndexValues != null){
+                ReadableMapKeySetIterator metricIterator = metricIndexValues.keySetIterator();
+                while (metricIterator.hasNextKey()) {
+                    String metricIndex = metricIterator.nextKey();
+                    int metricValue = metricIndexValues.getInt(metricIndex);
+                    hit.setCustomMetric(Integer.parseInt(metricIndex), metricValue);
+                }
             }
 
             tracker.send(hit.build());
@@ -417,6 +465,47 @@ public class GoogleAnalyticsBridge extends ReactContextBaseJavaModule {
         if (tracker != null)
         {
             tracker.setAppVersion(appVersion);
+        }
+    }
+
+    @ReactMethod
+    public void setCurrency(String trackerId, String currencyCode)
+    {
+        Tracker tracker = getTracker(trackerId);
+
+        if (tracker != null) {
+            tracker.set("&cu", currencyCode);
+        }
+    }
+
+    @ReactMethod
+    public void trackCampaignFromUrl(String trackerId, String urlString){
+        Tracker tracker = getTracker(trackerId);
+
+        if (tracker != null)
+        {
+            tracker.setScreenName("Init With Campaign");
+            tracker.send(new HitBuilders.ScreenViewBuilder()
+                                        .setCampaignParamsFromUrl(urlString)
+                                        .build());
+        }
+    }
+  
+    @ReactMethod
+    public void createNewSession(String trackerId, String screenName) {
+        Tracker tracker = getTracker(trackerId);
+        tracker.setScreenName(screenName);
+        tracker.send(new HitBuilders.ScreenViewBuilder().setNewSession().build());
+    }
+
+    @ReactMethod
+    public void dispatch(Promise promise) {
+        GoogleAnalytics analytics = getAnalyticsInstance();
+        try {
+            analytics.dispatchLocalHits();
+            promise.resolve(true);
+        } catch (Exception ex) {
+            promise.reject(ex);
         }
     }
 }

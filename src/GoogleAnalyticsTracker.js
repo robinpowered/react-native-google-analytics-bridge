@@ -1,5 +1,7 @@
 import { GoogleAnalyticsBridge } from './NativeBridges';
 
+const DEFAULT_DISPATCH_TIMEOUT = 15000;
+
 /**
  * Custom dimensions accept only strings and numbers.
  * @param customDimensionVal
@@ -57,6 +59,14 @@ export class GoogleAnalyticsTracker {
   }
 
   /**
+   * Track the campaign from url
+   * @param  {String} urlString The url of the deep link
+   */
+  trackCampaignFromUrl(urlString) {
+    GoogleAnalyticsBridge.trackCampaignFromUrl(this.id, urlString);
+  }
+
+  /**
    * Track an event that has occured
    * @param  {String} category       The event category
    * @param  {String} action         The event action
@@ -87,8 +97,19 @@ export class GoogleAnalyticsTracker {
     const formattedCustomDimensions = this.transformCustomDimensionsFieldsToIndexes(customDimensionValues);
     GoogleAnalyticsBridge.trackEventWithCustomDimensionValues(this.id, category, action, optionalValues, formattedCustomDimensions);
   }
-
   /**
+   * Track an event that has occured with custom dimension and metric values.
+   * @param  {String} category       The event category
+   * @param  {String} action         The event action
+   * @param  {Object} optionalValues An object containing optional label and value
+   * @param  {Object} customDimensionValues An object containing custom dimension key/value pairs
+   * @param  {Object} customMetricValues An object containing custom metric key/value pairs
+   */
+  trackEventWithCustomDimensionAndMetricValues(category, action, optionalValues = {}, customDimensionValues, customMetricValues) {
+    GoogleAnalyticsBridge.trackEventWithCustomDimensionAndMetricValues(this.id, category, action, optionalValues, customDimensionValues, customMetricValues);
+  }
+
+ /**
    * Track an event that has occured
    * @param  {String} category       The event category
    * @param  {Number} value         	The timing measurement in milliseconds
@@ -151,6 +172,22 @@ export class GoogleAnalyticsTracker {
   }
 
   /**
+   * Sets the current clientId for tracking.
+   * @param {String} clientId The current userId
+   */
+  setClient(clientId) {
+    GoogleAnalyticsBridge.setClient(this.id, clientId);
+  }
+
+  /**
+   * Get the current clientId.
+   * @returns {Promise<string>} Returns when done
+   */
+  getClientId() {
+    return GoogleAnalyticsBridge.getClientId(this.id);
+  }
+
+  /**
    * Sets if IDFA (identifier for advertisers) collection should be enabled
    * @param  {Boolean} enabled Defaults to true
    */
@@ -208,5 +245,60 @@ export class GoogleAnalyticsTracker {
    */
   setSamplingRate(sampleRatio) {
     GoogleAnalyticsBridge.setSamplingRate(this.id, sampleRatio);
+  }
+
+  /**
+   * Sets the currency for tracking.
+   * @param {String} currencyCode The currency ISO 4217 code
+   */
+  setCurrency(currencyCode) {
+    GoogleAnalyticsBridge.setCurrency(this.id, currencyCode);
+  }
+  
+  createNewSession(screenName) {
+    GoogleAnalyticsBridge.createNewSession(this.id, screenName);
+  }
+
+  /**
+   * This function lets you manually dispatch all hits which are queued.
+   * Use this function sparingly, as it will normally happen automatically
+   * as a batch.
+   * @returns {Promise<boolean>} Returns when done
+   */
+  dispatch() {
+    return GoogleAnalyticsBridge.dispatch();
+  }
+
+  /**
+   * The same as dispatch(), but also gives you the ability to time out
+   * the Promise in case dispatch takes too long.
+   * @param {Number} timeout The timeout. Default value is 15 sec.
+   * @returns {Promise<boolean>} Returns when done or timed out
+   */
+  dispatchWithTimeout(timeout = -1) {
+    if (timeout < 0) {
+      return GoogleAnalyticsBridge.dispatch();
+    }
+
+    let timer = null;
+
+    const withTimeout = timeout => (
+      new Promise(resolve => {
+        timer = setTimeout(() => {
+          timer = null;
+          resolve();
+        }, Math.min(timeout, DEFAULT_DISPATCH_TIMEOUT));
+      })
+    );
+
+    return Promise.race([
+      GoogleAnalyticsBridge.dispatch(),
+      withTimeout(timeout)
+    ]).then(result => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+      return result;
+    });
   }
 }

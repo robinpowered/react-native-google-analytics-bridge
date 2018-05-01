@@ -18,8 +18,9 @@ import java.util.concurrent.TimeUnit;
 
 public class GoogleTagManagerBridge extends ReactContextBaseJavaModule {
 
-    public GoogleTagManagerBridge(ReactApplicationContext reactContext) {
+    public GoogleTagManagerBridge(ReactApplicationContext reactContext, ContainerHolder containerHolder) {
         super(reactContext);
+        mContainerHolder = containerHolder;
     }
 
 
@@ -108,6 +109,13 @@ public class GoogleTagManagerBridge extends ReactContextBaseJavaModule {
               promise.reject(E_PUSH_EVENT_FAILED, new Throwable("Validation error, data must have a key \"event\" with valid event name"));
           }
       }
+    }
+    
+    @ReactMethod
+    public void setVerboseLoggingEnabled(final Boolean enabled, final Promise promise){
+        TagManager mTagManager = TagManager.getInstance(getReactApplicationContext());
+        mTagManager.setVerboseLoggingEnabled(enabled);
+        promise.resolve(true);
     }
 
     private boolean isValidMapToPushEvent(ReadableMap dictionary) {
